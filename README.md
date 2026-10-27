@@ -60,7 +60,7 @@ Os testes de navegador usam uma base sintética separada, `.env.test` ignorado e
 
 ## Easypanel
 
-Dockerfile com saída standalone, porta 3000 e usuário sem privilégios. Configure PostgreSQL privado e as variáveis no painel. Migrações são executadas uma vez por release usando o alvo `migrate` do Dockerfile, com a mesma conexão de banco, antes de iniciar o serviço web. O alvo final é `runner`. O arquivo `.env` nunca entra na imagem. Teste backup e restauração antes de usar dados reais; a implantação na VPS ainda não foi executada.
+Dockerfile com saída standalone, porta 3000 e usuário sem privilégios. Configure PostgreSQL privado e as variáveis no painel. Migrações são executadas uma vez por release usando o alvo `migrate` do Dockerfile, com a mesma conexão de banco, antes de iniciar o serviço web. O alvo final é `runner`. O arquivo `.env` nunca entra na imagem. Teste backup e restauração antes de usar dados reais. A primeira implantação foi conferida em 27/10/2026, conforme o registro ao final deste arquivo.
 
 Quando o painel não permite selecionar o alvo de build, `Dockerfile.admin` fornece uma imagem administrativa separada com Prisma e os scripts de cadastro. Ela usa `DATABASE_URL` em tempo de execução e executa `npm run db:migrate` por padrão. Use-a somente para administração; o serviço web deve continuar com `Dockerfile`. As credenciais administrativas de um PostgreSQL compartilhado não devem permanecer no ambiente do serviço web.
 
@@ -93,3 +93,11 @@ Passaram lint, TypeScript, compilação de produção, 18 testes de contrato e 1
 O plugin Browser não está disponível nesta sessão; a verificação usou Playwright instalado no projeto. As capturas são temporárias, fora do repositório. A tela local de acesso foi conferida em `http://localhost:3000`, com JavaScript pronto e envio POST; a API de usuários respondeu 401 sem autenticação. Não houve chamada real de IA, envio de credenciais por e-mail, publicação no GitHub ou implantação na VPS nesta etapa. Leitor de tela e dispositivos físicos continuam sem validação manual.
 
 O formulário local de cadastro de aluno também foi inspecionado visualmente em 1440 e 360 px, após aguardar a hidratação. Campos, navegação, instruções e ações ficaram legíveis, sem rolagem horizontal da página e sem erros de console. As primeiras capturas ainda exibiam o carregamento e foram descartadas da conferência visual.
+
+## Implantação no Easypanel em 27/10/2026
+
+Serviço `ai_agents/evidentia`, com domínio HTTPS `https://ai-agents-evidentia.gllv1i.easypanel.host`. O banco lógico `evidentia` usa o PostgreSQL existente `ai_agents/postgres_dev`, com usuário próprio `evidentia_app`. As três migrações foram aplicadas e conferidas no banco de destino. O PostgreSQL compartilhado não foi reiniciado.
+
+A preparação usou temporariamente a imagem administrativa, mediante autorização do responsável. Ao concluir, foram removidos do app a credencial administrativa do PostgreSQL, o script temporário e seu comando de execução. O serviço voltou ao `Dockerfile` web, executando `node server.js`, com apenas a conexão do usuário próprio do banco. Os valores das credenciais não são versionados.
+
+O smoke por HTTPS confirmou healthcheck e tela de acesso com status 200, arquivo estático com status 200, API de usuários com 401 sem autenticação e tentativa sintética de acesso com 401 por credenciais inexistentes. A tela deixou de indicar configuração de banco pendente. Não foi criada uma conta administrativa de produção nem houve importação de dados locais. Chamadas reais de IA e backup/restauração ainda não foram validados nesta implantação.
