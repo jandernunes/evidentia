@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+datasource db {
+  provider = "postgresql"
+}
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  role          String   @default("STUDENT")
+  isActive      Boolean  @default(true)
+  createdById   String?
+  createdBy     User?    @relation("UserCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdUsers  User[]   @relation("UserCreator")
+  createdCourses Course[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  classes       Classroom[]
+  enrollments   Enrollment[]
+  submissions   Submission[]
+  reviews       Review[]
+  @@index([createdById])
+}
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+model Account {
+  id                    String   @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  @@index([identifier])
+}
+model Course {
+  id      String @id @default(cuid())
+  name    String @unique
+  level   String
+  isActive Boolean @default(true)
+  createdById String?
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  updatedAt DateTime @default(now()) @updatedAt
+  classes Classroom[]
+  @@index([createdById])
+}
+model Discipline {
+  id      String @id @default(cuid())
+  name    String @unique
+  classes Classroom[]
+}
+model Classroom {
+  id           String @id @default(cuid())
+  name         String
+  period       String
+  isActive     Boolean @default(true)
+  updatedAt    DateTime @default(now()) @updatedAt
+  teacherId    String
+  teacher      User @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  disciplineId String
+  discipline   Discipline @relation(fields: [disciplineId], references: [id], onDelete: Restrict)
+  courses      Course[]
+  enrollments  Enrollment[]
+  activities   Activity[]
+  createdAt    DateTime @default(now())
+  @@index([teacherId])
+}
+model Enrollment {
+  id          String @id @default(cuid())
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Restrict)
+  studentId   String
+  student     User @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  registration String
+  @@unique([classroomId, studentId])
+  @@unique([classroomId, registration])
+}
+model Activity {
+  id           String @id @default(cuid())
+  classroomId  String
+  classroom    Classroom @relation(fields: [classroomId], references: [id], onDelete: Restrict)
+  title        String
+  instructions String
+  objectives   Json
+  maxQuestions Int @default(5)
+  createdAt    DateTime @default(now())
+  submissions  Submission[]
+  @@index([classroomId])
+}
+model Submission {
+  id         String @id @default(cuid())
+  activityId String
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  studentId  String
+  student    User @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  content    String
+  createdAt  DateTime @default(now())
+  exam       Exam?
+  @@unique([activityId, studentId])
+}
+model Exam {
+  id              String @id @default(cuid())
+  submissionId    String @unique
+  submission      Submission @relation(fields: [submissionId], references: [id], onDelete: Restrict)
+  status          String @default("PENDING")
+  version         Int @default(0)
+  generationAttempts Int @default(0)
+  snapshot        Json
+  evidence        Json @default("[]")
+  processingToken String?
+  leaseUntil      DateTime?
+  finishReason    String?
+  resultReleased  Boolean @default(false)
+  createdAt       DateTime @default(now())
+  questions       Question[]
+  reviews         Review[]
+}
+model Question {
+  id          String @id @default(cuid())
+  examId      String
+  exam        Exam @relation(fields: [examId], references: [id], onDelete: Restrict)
+  position    Int
+  objectiveId String
+  text        String
+  reason      String
+  answer      Answer?
+  @@unique([examId, position])
+}
+model Answer {
+  id           String @id @default(cuid())
+  questionId   String @unique
+  question     Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  text         String
+  origin       String
+  registeredBy String
+  createdAt    DateTime @default(now())
+}
+model Review {
+  id        String @id @default(cuid())
+  examId    String
+  exam      Exam @relation(fields: [examId], references: [id], onDelete: Restrict)
+  teacherId String
+  teacher   User @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  decision  Json
+  reason    String
+  createdAt DateTime @default(now())
+  @@index([examId, createdAt])
+}

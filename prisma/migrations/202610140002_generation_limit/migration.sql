@@ -1,0 +1,1 @@
+ALTER TABLE "Exam" ADD COLUMN "generationAttempts" INTEGER NOT NULL DEFAULT 0;

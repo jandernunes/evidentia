@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.next-test/
+.env
+.env.*
+!.env.example
+storage/
+src/generated/
+*.tsbuildinfo
+next-env.d.ts
+test-results/
+playwright-report/
+coverage/
+premium-audit.json
