@@ -1,5 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { activityInput, csvSafe, validateGeneration } from "../../src/server/schemas";
+import {
+  activityInput,
+  csvSafe,
+  newUserInput,
+  userUpdateInput,
+  validateGeneration,
+} from "../../src/server/schemas";
+
+describe("tamanho da senha", () => {
+  const account = { name: "Conta de teste", email: "password@example.test", role: "ADMIN" };
+  const version = { updatedAt: "2026-10-27T12:00:00.000Z" };
+  it.each([7, 8, 12, 128, 129])("valida %i caracteres no cadastro e na redefinição", (length) => {
+    const password = "x".repeat(length);
+    const accepted = length >= 8 && length <= 128;
+    expect(newUserInput.safeParse({ ...account, password }).success).toBe(accepted);
+    expect(userUpdateInput.safeParse({ ...version, password }).success).toBe(accepted);
+  });
+  it("permite editar a conta sem alterar sua senha", () => {
+    expect(userUpdateInput.safeParse({ ...version, name: "Nome atualizado" }).success).toBe(true);
+  });
+});
 
 const valid = {
   action: "ASK",

@@ -24,7 +24,7 @@ function createAuth() {
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL,
     database: prismaAdapter(getDb(), { provider: "postgresql" }),
-    emailAndPassword: { enabled: true, disableSignUp: true, minPasswordLength: 12 },
+    emailAndPassword: { enabled: true, disableSignUp: true, minPasswordLength: 8 },
     rateLimit: { enabled: true, window: 60, max: 20 },
     session: { expiresIn: 60 * 60 * 8, updateAge: 60 * 60 },
     trustedOrigins: [baseURL],

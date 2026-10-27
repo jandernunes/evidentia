@@ -39,7 +39,7 @@ npm run account:create
 npm run dev
 ```
 
-Abra `http://localhost:3000`. A administração usa **Usuários → Cadastrar usuário** para criar administradores, professores e estudantes. Informe nome, e-mail, perfil e senha inicial com pelo menos 12 caracteres. A senha não é enviada por e-mail; compartilhe-a diretamente com a pessoa. Não há cadastro público.
+Abra `http://localhost:3000`. A administração usa **Usuários → Cadastrar usuário** para criar administradores, professores e estudantes. Informe nome, e-mail, perfil e senha inicial com pelo menos 8 caracteres. A senha não é enviada por e-mail; compartilhe-a diretamente com a pessoa. Não há cadastro público.
 
 O professor usa **Alunos → Cadastrar aluno** para criar estudantes e pode informar turma e matrícula no mesmo cadastro. Contas já existentes podem ser vinculadas no detalhe da turma, por e-mail e matrícula ou por CSV com cabeçalho `matricula,nome,email`. A importação não cria contas nem redefine senhas.
 

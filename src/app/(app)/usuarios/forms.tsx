@@ -61,8 +61,8 @@ export function UserForm({
         required={!user}
         hint={
           user
-            ? "Deixe em branco para manter a senha atual. Uma nova senha precisa ter pelo menos 12 caracteres."
-            : "Use pelo menos 12 caracteres e compartilhe a senha diretamente com a pessoa."
+            ? "Deixe em branco para manter a senha atual. Uma nova senha precisa ter pelo menos 8 caracteres."
+            : "Use pelo menos 8 caracteres e compartilhe a senha diretamente com a pessoa."
         }
       />
       {!user && role === "STUDENT" && (

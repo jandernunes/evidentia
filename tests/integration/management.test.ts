@@ -19,7 +19,7 @@ import {
 
 const db = getDb();
 const stamp = crypto.randomUUID();
-const password = "Senha-sintetica-123456";
+const password = "Teste-8!";
 let admin: Manager, teacher: Manager, other: Manager, student: Manager;
 let disciplineId: string;
 const version = (record: { updatedAt: Date }) => ({ updatedAt: record.updatedAt.toISOString() });
@@ -227,11 +227,11 @@ describe("gestão acadêmica e de acessos", () => {
     const active = await updateUser(admin, user.id, {
       ...version(inactive),
       isActive: true,
-      password: "Outra-senha-sintetica-123",
+      password: "Nova123!",
     });
     const account = await db.account.findFirstOrThrow({ where: { userId: user.id } });
     expect(
-      await verifyPassword({ hash: account.password ?? "", password: "Outra-senha-sintetica-123" }),
+      await verifyPassword({ hash: account.password ?? "", password: "Nova123!" }),
     ).toBe(true);
     await expect(
       updateUser(other, user.id, { ...version(active), role: "ADMIN" }),

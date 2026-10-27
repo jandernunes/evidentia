@@ -8,7 +8,7 @@ async function main() {
     .object({
       ACCOUNT_NAME: z.string().min(2),
       ACCOUNT_EMAIL: z.email(),
-      ACCOUNT_PASSWORD: z.string().min(12),
+      ACCOUNT_PASSWORD: z.string().min(8),
       ACCOUNT_ROLE: z.enum(["ADMIN", "TEACHER", "STUDENT"]),
     })
     .parse(process.env);

@@ -20,7 +20,7 @@ export const newUserInput = z
   .object({
     name: text(2, 160),
     email: z.string().trim().toLowerCase().pipe(z.email()),
-    password: z.string().min(12, "A senha precisa ter pelo menos 12 caracteres.").max(128),
+    password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres.").max(128),
     role: roleSchema,
     classroomId: text(1, 100).optional(),
     registration: text(1, 60).optional(),
@@ -32,7 +32,7 @@ export const userUpdateInput = z
     email: z.string().trim().toLowerCase().pipe(z.email()).optional(),
     password: z
       .string()
-      .min(12, "A senha precisa ter pelo menos 12 caracteres.")
+      .min(8, "A senha precisa ter pelo menos 8 caracteres.")
       .max(128)
       .optional(),
     role: roleSchema.optional(),
