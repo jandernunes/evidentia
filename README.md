@@ -62,6 +62,8 @@ Os testes de navegador usam uma base sintética separada, `.env.test` ignorado e
 
 Dockerfile com saída standalone, porta 3000 e usuário sem privilégios. Configure PostgreSQL privado e as variáveis no painel. Migrações são executadas uma vez por release usando o alvo `migrate` do Dockerfile, com a mesma conexão de banco, antes de iniciar o serviço web. O alvo final é `runner`. O arquivo `.env` nunca entra na imagem. Teste backup e restauração antes de usar dados reais; a implantação na VPS ainda não foi executada.
 
+Quando o painel não permite selecionar o alvo de build, `Dockerfile.admin` fornece uma imagem administrativa separada com Prisma e os scripts de cadastro. Ela usa `DATABASE_URL` em tempo de execução e executa `npm run db:migrate` por padrão. Use-a somente para administração; o serviço web deve continuar com `Dockerfile`. As credenciais administrativas de um PostgreSQL compartilhado não devem permanecer no ambiente do serviço web.
+
 ## Limites desta etapa
 
 Entrada PDF, relatório PDF, prazo de entrega, edição/versionamento de atividades pela interface, primeiro acesso com troca obrigatória de senha, recuperação de conta pela interface, auditoria operacional completa e métricas de custo/modelo ainda estão pendentes. A importação associa contas existentes; não provisiona novas contas. As telas de gestão usam paginação de 20 itens. As APIs de listagem legadas mantêm limites de 200 itens para catálogos/usuários e 100 para turmas. Não usar esta versão com dados acadêmicos reais antes de concluir esses controles e a validação do piloto.
