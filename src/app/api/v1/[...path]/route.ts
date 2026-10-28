@@ -26,7 +26,8 @@ import {
   updateUser,
   userFields,
 } from "@/server/management";
-import { activityInput, disciplineInput, snapshotSchema, submissionInput } from "@/server/schemas";
+import { activityInput, disciplineInput, snapshotSchema } from "@/server/schemas";
+import { releaseSubmission, submitWork } from "@/server/submissions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -187,45 +188,9 @@ export async function POST(request: Request, context: Context) {
       if (!classroom) throw new AppError(404, "NOT_FOUND", "Turma não encontrada.");
       return db.activity.create({ data });
     }
-    if (resource === "activities" && action === "submit") {
-      if (user.role !== "STUDENT")
-        throw new AppError(403, "FORBIDDEN", "A entrega deve ser feita pela conta do estudante.");
-      const activity = await db.activity.findFirst({
-        where: { id, classroom: { ...classScope(user), isActive: true } },
-      });
-      if (!activity) throw new AppError(404, "NOT_FOUND", "Atividade não encontrada.");
-      const data = submissionInput.parse(input);
-      return db.submission.create({
-        data: { activityId: id, studentId: user.id, content: data.content },
-      });
-    }
-    if (resource === "submissions" && action === "release") {
-      requireTeacher(user);
-      const submission = await db.submission.findFirst({
-        where: { id, activity: { classroom: classScope(user) } },
-        include: {
-          activity: { include: { classroom: { include: { discipline: true, courses: true } } } },
-        },
-      });
-      if (!submission) throw new AppError(404, "NOT_FOUND", "Entrega não encontrada.");
-      const activity = submission.activity;
-      return db.exam.upsert({
-        where: { submissionId: id },
-        create: {
-          submissionId: id,
-          snapshot: {
-            title: activity.title,
-            instructions: activity.instructions,
-            objectives: activity.objectives,
-            work: submission.content,
-            maxQuestions: activity.maxQuestions,
-            discipline: activity.classroom.discipline.name,
-            courses: activity.classroom.courses.map((c) => `${c.name} (${c.level})`),
-          },
-        },
-        update: {},
-      });
-    }
+    if (resource === "activities" && action === "submit") return submitWork(id, user, input);
+    if (resource === "submissions" && action === "release")
+      return releaseSubmission(id, user, input);
     if (resource === "exams") {
       if (action === "answers") return answerExam(id, user, input);
       if (action === "advance") return advanceExam(id, user);

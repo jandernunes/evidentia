@@ -63,3 +63,9 @@ Aplicar humanizer a rótulos, instruções, erros e perguntas. Relatórios do ap
 ## Gestão de cadastros
 
 Listas de cursos, turmas e usuários compartilham busca, filtro de situação, paginação e tabela com cabeçalho e legenda. No celular, a busca ocupa uma coluna; a rolagem horizontal fica na região nomeada da tabela, com acesso por teclado. Formulários reutilizam `ApiForm` e `Field`. O diálogo de confirmação e as ações de situação são compartilhados entre entidades, sem dependências novas.
+
+## Entrega do trabalho
+
+`SubmissionForm` usa o formulário compartilhado e oferece botões de formatação Markdown, atalhos de negrito e itálico e uma prévia abaixo do campo. O texto continua obrigatório, entre 50 e 20.000 caracteres, e fica disponível para correção após erros. `FormattedWork` apresenta a mesma formatação na prévia e na consulta, sem executar HTML ou carregar imagens externas. Entregas antigas mantêm sua apresentação literal.
+
+A seleção de colegas usa checkboxes nativos. A confirmação de envio informa que o texto será compartilhado com os integrantes. Cada estudante acessa apenas sua própria arguição. O link opcional do Drive fica disponível ao professor responsável e à administração, sem consulta automática pela IA. Barra de formatação e ações quebram em várias linhas no celular.

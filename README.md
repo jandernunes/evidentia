@@ -7,7 +7,8 @@ Aplicação Next.js com TypeScript, PostgreSQL, Prisma e autenticação Better A
 - Login local, cadastro de contas pela administração e cadastro público bloqueado.
 - Cursos e disciplinas configuráveis, turmas compartilhadas e associação de estudantes por CSV.
 - Atividades com objetivos e critérios próprios de qualquer área.
-- Entrega textual, liberação docente, sessão com uma pergunta por vez e transcrição identificada.
+- Entrega textual obrigatória com formatação Markdown e prévia, link opcional do Drive para consulta docente e seleção de colegas da turma em entregas de equipe.
+- Uma entrega compartilhada, com liberação docente, arguição, respostas e resultado individuais para cada integrante.
 - Resposta gravada antes da próxima geração, reenvio idempotente, reserva com vencimento e rejeição de retorno atrasado.
 - Mapa provisório, revisão docente com histórico e liberação do resultado ao estudante.
 - Exportações CSV e JSON por atividade, com autorização docente e indicação de revisão pendente.
@@ -101,3 +102,11 @@ Serviço `ai_agents/evidentia`, com domínio HTTPS `https://ai-agents-evidentia.
 A preparação usou temporariamente a imagem administrativa, mediante autorização do responsável. Ao concluir, foram removidos do app a credencial administrativa do PostgreSQL, o script temporário e seu comando de execução. O serviço voltou ao `Dockerfile` web, executando `node server.js`, com apenas a conexão do usuário próprio do banco. Os valores das credenciais não são versionados.
 
 O smoke por HTTPS confirmou healthcheck e tela de acesso com status 200, arquivo estático com status 200, API de usuários com 401 sem autenticação e tentativa sintética de acesso com 401 por credenciais inexistentes. A tela deixou de indicar configuração de banco pendente. Não foi criada uma conta administrativa de produção nem houve importação de dados locais. Chamadas reais de IA e backup/restauração ainda não foram validados nesta implantação.
+
+## Entregas em equipe e formatação
+
+A migração `202610270001_team_submissions` adiciona formatação, link opcional e integrantes por entrega. As sessões existentes recebem o vínculo com seu estudante, preservando identificadores, respostas e snapshots. Cada integrante de uma equipe tem liberação e avaliação próprias. Alunos de fora da turma, contas inativas e participantes que já possuem entrega na atividade são recusados. O conteúdo e os integrantes ficam fixos depois do envio.
+
+O texto continua obrigatório, entre 50 e 20.000 caracteres. A barra oferece negrito, itálico, título, lista, citação e código, com prévia em Markdown. Entregas antigas mantêm texto literal. HTML e imagens externas não são executados ou carregados. O link do Drive fica disponível para consulta do docente responsável e da administração; o aluno precisa conceder acesso no Google. A IA usa o texto e os objetivos cadastrados, sem abrir o link.
+
+Na validação local, passaram 38 testes unitários, 16 testes de integração e os três fluxos Playwright, incluindo o novo fluxo de equipe. Foram verificados envio, cancelamento, preservação dos campos após erro, formatação, isolamento entre colegas, liberação individual, cinco larguras de tela e axe-core. A migração no banco sintético preservou 45 entregas e 40 snapshots de sessões anteriores. A auditoria estática da interface não encontrou achados. Essas verificações não substituem testes com leitor de tela e dispositivos físicos.

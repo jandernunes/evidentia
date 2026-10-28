@@ -661,6 +661,55 @@ fieldset {
   resize: none;
 }
 
+.formatting-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 0;
+  border: 0;
+}
+.formatting-actions .button {
+  padding: 8px 12px;
+  min-height: 44px;
+}
+.work-editor {
+  min-height: 320px;
+}
+.work-preview {
+  min-height: 160px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-top: 16px;
+}
+.formatted-work {
+  overflow-wrap: anywhere;
+  max-width: 85ch;
+}
+.formatted-work p {
+  white-space: pre-wrap;
+  margin-bottom: 1em;
+}
+.formatted-work pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--surface);
+  padding: 14px;
+}
+.formatted-work blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 16px;
+  margin-left: 0;
+}
+.list > .submission-item {
+  align-items: flex-start;
+  flex-direction: column;
+}
+.list > .submission-item > div {
+  width: 100%;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

@@ -71,11 +71,17 @@ beforeEach(async () => {
     },
   });
   const submission = await db.submission.create({
-    data: { activityId: activity.id, studentId: student.id, content: snapshot.work },
+    data: {
+      activityId: activity.id,
+      studentId: student.id,
+      content: snapshot.work,
+      members: { create: { studentId: student.id } },
+    },
   });
   const exam = await db.exam.create({
     data: {
       submissionId: submission.id,
+      studentId: student.id,
       snapshot,
       status: "WAITING",
       questions: {

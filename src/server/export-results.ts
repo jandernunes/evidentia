@@ -20,8 +20,11 @@ export async function exportResults(
         take: 201,
         orderBy: { createdAt: "asc" },
         include: {
-          student: { select: { id: true, name: true } },
-          exam: {
+          members: {
+            include: { student: { select: { id: true, name: true } } },
+            orderBy: { student: { name: "asc" } },
+          },
+          exams: {
             include: {
               questions: { orderBy: { position: "asc" }, include: { answer: true } },
               reviews: { orderBy: { createdAt: "desc" }, take: 1 },
@@ -34,41 +37,45 @@ export async function exportResults(
   if (!activity) throw new AppError(404, "NOT_FOUND", "Atividade não encontrada.");
   if (activity.submissions.length > 200)
     throw new AppError(413, "EXPORT_LIMIT", "Esta versão exporta até 200 entregas por atividade.");
-  const results = activity.submissions.map((submission) => {
-    const exam = submission.exam;
-    const review = exam?.reviews[0];
-    return {
-      student: submission.student,
-      submissionId: submission.id,
-      submittedAt: submission.createdAt.toISOString(),
-      examId: exam?.id ?? null,
-      status: exam?.status ?? "AGUARDANDO_LIBERACAO",
-      reviewed: Boolean(review),
-      resultReleased: exam?.resultReleased ?? false,
-      objectives: exam
-        ? snapshotSchema.parse(exam.snapshot).objectives
-        : z.array(objectiveSchema).parse(activity.objectives),
-      suggestion: exam ? z.array(evidenceSchema).parse(exam.evidence) : [],
-      decision: review ? z.array(evidenceSchema).parse(review.decision) : null,
-      reviewReason: review?.reason ?? null,
-      history:
-        exam?.questions.map((q) => ({
-          questionId: q.id,
-          position: q.position,
-          objectiveId: q.objectiveId,
-          question: q.text,
-          answer: q.answer
-            ? {
-                id: q.answer.id,
-                text: q.answer.text,
-                origin: q.answer.origin,
-                registeredBy: q.answer.registeredBy,
-                createdAt: q.answer.createdAt.toISOString(),
-              }
-            : null,
-        })) ?? [],
-    };
-  });
+  const results = activity.submissions.flatMap((submission) =>
+    submission.members.map((member) => {
+      const exam = submission.exams.find((item) => item.studentId === member.studentId);
+      const review = exam?.reviews[0];
+      return {
+        student: member.student,
+        submissionId: submission.id,
+        participants: submission.members.map((item) => item.student),
+        driveUrl: submission.driveUrl,
+        submittedAt: submission.createdAt.toISOString(),
+        examId: exam?.id ?? null,
+        status: exam?.status ?? "AGUARDANDO_LIBERACAO",
+        reviewed: Boolean(review),
+        resultReleased: exam?.resultReleased ?? false,
+        objectives: exam
+          ? snapshotSchema.parse(exam.snapshot).objectives
+          : z.array(objectiveSchema).parse(activity.objectives),
+        suggestion: exam ? z.array(evidenceSchema).parse(exam.evidence) : [],
+        decision: review ? z.array(evidenceSchema).parse(review.decision) : null,
+        reviewReason: review?.reason ?? null,
+        history:
+          exam?.questions.map((q) => ({
+            questionId: q.id,
+            position: q.position,
+            objectiveId: q.objectiveId,
+            question: q.text,
+            answer: q.answer
+              ? {
+                  id: q.answer.id,
+                  text: q.answer.text,
+                  origin: q.answer.origin,
+                  registeredBy: q.answer.registeredBy,
+                  createdAt: q.answer.createdAt.toISOString(),
+                }
+              : null,
+          })) ?? [],
+      };
+    }),
+  );
   if (format === "json")
     return Response.json(
       {

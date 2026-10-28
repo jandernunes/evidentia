@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
-import { ActionButton, ApiForm, Field } from "@/components/forms";
+import { ActionButton } from "@/components/forms";
+import { FormattedWork } from "@/components/formatted-work";
+import { SubmissionForm } from "@/components/submission-form";
 import { PageHeading } from "@/components/ui";
 import { classScope, pageUser } from "@/server/access";
 import { getDb } from "@/server/db";
@@ -15,14 +17,38 @@ export default async function ActivityDetail({ params }: { params: Promise<{ id:
     include: {
       classroom: { include: { discipline: true, courses: true } },
       submissions: {
-        where: user.role === "STUDENT" ? { studentId: user.id } : {},
-        include: { student: { select: { name: true } }, exam: true },
+        where: user.role === "STUDENT" ? { members: { some: { studentId: user.id } } } : {},
+        include: {
+          student: { select: { name: true } },
+          members: {
+            include: { student: { select: { id: true, name: true } } },
+            orderBy: { student: { name: "asc" } },
+          },
+          exams: {
+            where: user.role === "STUDENT" ? { studentId: user.id } : {},
+            select: { id: true, studentId: true },
+          },
+        },
         orderBy: { createdAt: "desc" },
         take: 200,
       },
     },
   });
   if (!activity) notFound();
+  const classmates =
+    user.role === "STUDENT" && !activity.submissions.length
+      ? await getDb().user.findMany({
+          where: {
+            id: { not: user.id },
+            role: "STUDENT",
+            isActive: true,
+            enrollments: { some: { classroomId: activity.classroomId } },
+            submissionMemberships: { none: { activityId: id } },
+          },
+          select: { id: true, name: true },
+          orderBy: { name: "asc" },
+        })
+      : [];
   const objectives = z.array(objectiveSchema).parse(activity.objectives);
   return (
     <>
@@ -51,17 +77,10 @@ export default async function ActivityDetail({ params }: { params: Promise<{ id:
         <section className="panel">
           <h2>Enviar trabalho</h2>
           <p>
-            Envie uma versão textual da entrega. Depois do envio, o professor poderá liberar sua
-            arguição.
+            Apresente o trabalho no texto abaixo. Você também pode informar um link do Drive para o
+            professor e indicar os colegas que participaram da entrega.
           </p>
-          <ApiForm endpoint={`/api/v1/activities/${id}/submit`} label="Enviar trabalho">
-            <Field
-              name="content"
-              label="Conteúdo do trabalho"
-              type="textarea"
-              hint="Entre 50 e 20.000 caracteres. Preserve explicações, decisões e referências relevantes."
-            />
-          </ApiForm>
+          <SubmissionForm activityId={id} classmates={classmates} />
         </section>
       )}
       <section className="panel">
@@ -71,33 +90,61 @@ export default async function ActivityDetail({ params }: { params: Promise<{ id:
         ) : (
           <ul className="list">
             {activity.submissions.map((s) => (
-              <li key={s.id}>
+              <li key={s.id} className="submission-item">
                 <div>
-                  <h3>{s.student.name}</h3>
+                  <h3>{s.members.map((member) => member.student.name).join(", ")}</h3>
+                  <p className="meta">
+                    {s.members.length > 1 ? "Entrega em equipe" : "Entrega individual"} · Enviada
+                    por {s.student.name}
+                  </p>
                   <p className="meta">
                     Recebida em{" "}
                     {s.createdAt.toLocaleString("pt-BR", { timeZone: "America/Fortaleza" })}
                   </p>
-                  {user.role !== "STUDENT" && (
-                    <details>
-                      <summary>Consultar trabalho</summary>
-                      <p className="prose">{s.content}</p>
-                    </details>
+                  <details>
+                    <summary>Consultar trabalho</summary>
+                    <FormattedWork content={s.content} format={s.contentFormat} />
+                  </details>
+                  {user.role !== "STUDENT" && s.driveUrl && (
+                    <p>
+                      <a href={s.driveUrl} target="_blank" rel="noopener noreferrer">
+                        Consultar materiais no Drive (abre em outra aba)
+                      </a>
+                    </p>
                   )}
                 </div>
-                {s.exam ? (
-                  <Link className="button secondary" href={`/sessoes/${s.exam.id}`}>
-                    Abrir sessão
-                  </Link>
-                ) : user.role !== "STUDENT" ? (
-                  <ActionButton
-                    endpoint={`/api/v1/submissions/${s.id}/release`}
-                    label="Liberar arguição"
-                    destination="$exam"
-                  />
-                ) : (
-                  <span>Aguardando liberação do professor</span>
-                )}
+                <div className="stack">
+                  {s.members
+                    .filter((member) => user.role !== "STUDENT" || member.studentId === user.id)
+                    .map((member) => {
+                      const exam = s.exams.find((item) => item.studentId === member.studentId);
+                      return (
+                        <div key={member.studentId}>
+                          {exam ? (
+                            <Link className="button secondary" href={`/sessoes/${exam.id}`}>
+                              Abrir sessão
+                              {user.role !== "STUDENT" && s.members.length > 1
+                                ? ` de ${member.student.name}`
+                                : ""}
+                            </Link>
+                          ) : user.role !== "STUDENT" ? (
+                            <ActionButton
+                              endpoint={`/api/v1/submissions/${s.id}/release`}
+                              label={
+                                s.members.length > 1
+                                  ? `Liberar arguição de ${member.student.name}`
+                                  : "Liberar arguição"
+                              }
+                              data={{ studentId: member.studentId }}
+                              destination="$exam"
+                            />
+                          ) : (
+                            <span>Aguardando liberação do professor</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
               </li>
             ))}
           </ul>

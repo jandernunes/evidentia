@@ -273,6 +273,7 @@ export async function updateUser(actor: Manager, id: string, input: unknown) {
               classes: true,
               enrollments: true,
               submissions: true,
+              submissionMemberships: true,
               reviews: true,
               createdUsers: true,
               createdCourses: true,
@@ -334,6 +335,7 @@ export async function deleteUser(actor: Manager, id: string, input: unknown) {
             classes: true,
             enrollments: true,
             submissions: true,
+            submissionMemberships: true,
             reviews: true,
             createdUsers: true,
             createdCourses: true,
@@ -386,8 +388,8 @@ export async function removeEnrollment(actor: Manager, id: string, enrollmentId:
     });
     if (!enrollment) throw new AppError(404, "NOT_FOUND", "Participante não encontrado.");
     if (
-      await tx.submission.count({
-        where: { studentId: enrollment.studentId, activity: { classroomId: id } },
+      await tx.submissionMember.count({
+        where: { studentId: enrollment.studentId, submission: { activity: { classroomId: id } } },
       })
     )
       throw new AppError(

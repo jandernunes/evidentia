@@ -16,7 +16,7 @@ export default async function ExamPage({ params }: { params: Promise<{ id: strin
     <>
       <PageHeading
         title={snapshot.title}
-        description={`${snapshot.discipline} · ${exam.submission.student.name}`}
+        description={`${snapshot.discipline} · ${exam.participant.student.name}`}
       />
       <p className="notice">
         {statusLabels[exam.status]} · até {snapshot.maxQuestions} perguntas.{" "}

@@ -30,11 +30,7 @@ export const userUpdateInput = z
   .object({
     name: text(2, 160).optional(),
     email: z.string().trim().toLowerCase().pipe(z.email()).optional(),
-    password: z
-      .string()
-      .min(8, "A senha precisa ter pelo menos 8 caracteres.")
-      .max(128)
-      .optional(),
+    password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres.").max(128).optional(),
     role: roleSchema.optional(),
     isActive: z.boolean().optional(),
     updatedAt: z.iso.datetime(),
@@ -63,7 +59,44 @@ export const activityInput = z.object({
   objectives: z.array(objectiveSchema).min(1).max(8),
   maxQuestions: z.number().int().min(1).max(5),
 });
-export const submissionInput = z.object({ content: text(50, 20_000) });
+export const driveUrlSchema = z
+  .string()
+  .trim()
+  .max(2000)
+  .refine((value) => {
+    if (!value) return true;
+    try {
+      const url = new URL(value);
+      return (
+        url.protocol === "https:" &&
+        ["drive.google.com", "docs.google.com"].includes(url.hostname) &&
+        !url.username &&
+        !url.password &&
+        (!url.port || url.port === "443")
+      );
+    } catch {
+      return false;
+    }
+  }, "Informe um link HTTPS do Google Drive ou Google Docs.");
+export const submissionInput = z
+  .object({
+    content: text(50, 20_000),
+    contentFormat: z.enum(["PLAIN", "MARKDOWN"]).default("PLAIN"),
+    driveUrl: driveUrlSchema.optional().default(""),
+    isTeam: z.boolean().default(false),
+    teammateIds: z.array(text(1, 100)).max(199).default([]),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.isTeam !== value.teammateIds.length > 0)
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Para uma entrega em equipe, selecione pelo menos um colega. Para entrega individual, desmarque os colegas.",
+      });
+    if (new Set(value.teammateIds).size !== value.teammateIds.length)
+      ctx.addIssue({ code: "custom", message: "Selecione cada colega uma única vez." });
+  });
 export const answerInput = z.object({
   questionId: text(1, 100),
   text: text(1, 5000),
@@ -95,6 +128,9 @@ export const snapshotSchema = z.object({
   maxQuestions: z.number(),
   objectives: z.array(objectiveSchema),
   work: z.string(),
+  workFormat: z.enum(["PLAIN", "MARKDOWN"]).optional(),
+  participants: z.array(z.object({ id: z.string(), name: z.string() })).optional(),
+  examinee: z.object({ id: z.string(), name: z.string() }).optional(),
 });
 export function validateGeneration(data: unknown, objectiveIds: string[], answerIds: string[]) {
   const value = generationSchema.parse(data);

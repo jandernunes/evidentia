@@ -24,6 +24,7 @@ model User {
   classes       Classroom[]
   enrollments   Enrollment[]
   submissions   Submission[]
+  submissionMemberships SubmissionMember[]
   reviews       Review[]
   @@index([createdById])
 }
@@ -127,14 +128,31 @@ model Submission {
   studentId  String
   student    User @relation(fields: [studentId], references: [id], onDelete: Restrict)
   content    String
+  contentFormat String @default("PLAIN")
+  driveUrl   String?
   createdAt  DateTime @default(now())
-  exam       Exam?
+  members    SubmissionMember[]
+  exams      Exam[]
   @@unique([activityId, studentId])
+  @@unique([id, activityId])
+}
+model SubmissionMember {
+  submissionId String
+  activityId   String
+  studentId    String
+  submission   Submission @relation(fields: [submissionId, activityId], references: [id, activityId], onDelete: Restrict)
+  student      User @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  exam         Exam?
+  @@id([submissionId, studentId])
+  @@unique([activityId, studentId])
+  @@index([studentId])
 }
 model Exam {
   id              String @id @default(cuid())
-  submissionId    String @unique
+  submissionId    String
   submission      Submission @relation(fields: [submissionId], references: [id], onDelete: Restrict)
+  studentId       String
+  participant     SubmissionMember @relation(fields: [submissionId, studentId], references: [submissionId, studentId], onDelete: Restrict)
   status          String @default("PENDING")
   version         Int @default(0)
   generationAttempts Int @default(0)
@@ -147,6 +165,7 @@ model Exam {
   createdAt       DateTime @default(now())
   questions       Question[]
   reviews         Review[]
+  @@unique([submissionId, studentId])
 }
 model Question {
   id          String @id @default(cuid())

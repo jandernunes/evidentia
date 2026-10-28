@@ -9,18 +9,16 @@ export async function ownedExam(id: string, user: Actor) {
   const exam = await getDb().exam.findFirst({
     where: {
       id,
-      submission:
-        user.role === "STUDENT"
-          ? { studentId: user.id }
-          : { activity: { classroom: classScope(user) } },
+      ...(user.role === "STUDENT" ? { studentId: user.id } : {}),
+      submission: { activity: { classroom: classScope(user) } },
     },
     include: {
       submission: {
         include: {
-          student: { select: { id: true, name: true } },
           activity: { include: { classroom: true } },
         },
       },
+      participant: { include: { student: { select: { id: true, name: true } } } },
       questions: { orderBy: { position: "asc" }, include: { answer: true } },
       reviews: { orderBy: { createdAt: "desc" }, take: 1 },
     },

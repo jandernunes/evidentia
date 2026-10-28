@@ -178,7 +178,12 @@ describe("gestão acadêmica e de acessos", () => {
       },
     });
     await db.submission.create({
-      data: { activityId: activity.id, studentId: created.id, content: "Resposta sintética" },
+      data: {
+        activityId: activity.id,
+        studentId: created.id,
+        content: "Resposta sintética",
+        members: { create: { studentId: created.id } },
+      },
     });
     await expect(removeEnrollment(teacher, classroom.id, enrollment.id)).rejects.toMatchObject({
       code: "HAS_DEPENDENCIES",
@@ -230,9 +235,7 @@ describe("gestão acadêmica e de acessos", () => {
       password: "Nova123!",
     });
     const account = await db.account.findFirstOrThrow({ where: { userId: user.id } });
-    expect(
-      await verifyPassword({ hash: account.password ?? "", password: "Nova123!" }),
-    ).toBe(true);
+    expect(await verifyPassword({ hash: account.password ?? "", password: "Nova123!" })).toBe(true);
     await expect(
       updateUser(other, user.id, { ...version(active), role: "ADMIN" }),
     ).rejects.toMatchObject({ status: 403 });

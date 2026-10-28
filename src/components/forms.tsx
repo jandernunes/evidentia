@@ -192,10 +192,12 @@ export function ActionButton({
   endpoint,
   label,
   destination,
+  data,
 }: {
   endpoint: string;
   label: string;
   destination?: string;
+  data?: Record<string, string>;
 }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -208,7 +210,7 @@ export function ActionButton({
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: "{}",
+        body: JSON.stringify(data ?? {}),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message);
